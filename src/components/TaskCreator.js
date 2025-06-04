@@ -155,7 +155,7 @@ const TaskCreator = () => {
             id: 'story',
             statuses: ['To Do', 'In Progress', 'Done']
         },
-        {
+        { 
             name: 'Epic',
             icon: 'pi pi-sitemap',
             color: '#6554c0',
@@ -303,15 +303,7 @@ const TaskCreator = () => {
             // Return a div with border styling instead of hr
             return (
                 <div
-                    style={{
-                        borderBottom: '4px solid #333',
-                        width: '100%',
-                        height: '4px',
-                        margin: '8px 0',
-                        padding: 0,
-                        backgroundColor: 'transparent',
-                        pointerEvents: 'none'
-                    }}
+                    className='border-t border-gray-200'
                 ></div>
             );
         }
@@ -505,7 +497,7 @@ const TaskCreator = () => {
 
     const dropdownWorkTypes = [
         ...workTypes,
-        { id: 'divider', disabled: true }, // Remove the name property completely
+        { id: 'divider', disabled: true }, 
         { name: 'Add Work Type', id: 'create-new-work-type' },
         { name: 'Edit Work Type', id: 'edit-selected-work-type' }
     ];
