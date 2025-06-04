@@ -92,7 +92,37 @@ const customStyles = `
     .icon-upload-area .p-fileupload-content {
         display: none;
     }
-`;
+
+    /* Styling for the dropdown separator and items */
+    .dropdown-divider {
+        border-top: 3px solid #666 !important;
+        margin: 8px 0 !important;
+        padding: 0 !important;
+        height: 0 !important;
+        width: 100% !important;
+        display: block !important;
+        pointer-events: none !important;
+        background-color: transparent !important;
+    }
+    
+    .action-item-add {
+        color: inherit;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+
+    /* Make dropdown icons smaller */
+    .work-type-icon {
+        font-size: 1rem !important;
+    }
+    
+    .work-type-icon-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.5rem;
+        height: 1.5rem;
+    }`;
 
 const TaskCreator = () => {
     const [workTypeModalVisible, setWorkTypeModalVisible] = useState(false);
@@ -109,15 +139,15 @@ const TaskCreator = () => {
                 'To Do', 'In Progress', 'In Review', 'Ready for QA', 'QA in Progress', 'Blocked', 'Done or Closed'
             ]
         },
-        // {
-        //     name: 'Bug',
-        //     icon: 'pi pi-bug',
-        //     color: '#ff5630',
-        //     id: 'bug',
-        //     statuses: [
-        //         'Open', 'Triaged', 'In Progress', 'Ready for QA', 'QA in Progress', 'Reopened', 'Blocked', 'Closed', 'Won\'t Fix', 'Duplicate'
-        //     ]
-        // },
+        {
+            name: 'Bug',
+            icon: 'pi pi-exclamation-circle', // Alternative bug icon
+            color: '#ff5630',
+            id: 'bug',
+            statuses: [
+                'Open', 'Triaged', 'In Progress', 'Ready for QA', 'QA in Progress', 'Reopened', 'Blocked', 'Closed', 'Won\'t Fix', 'Duplicate'
+            ]
+        },
         {
             name: 'Story',
             icon: 'pi pi-book',
@@ -163,7 +193,7 @@ const TaskCreator = () => {
 
     const predefinedIcons = [
         { value: 'pi pi-check-square', color: colors[0] },
-        // { value: 'pi pi-bug', color: colors[1] },
+        { value: 'pi pi-exclamation-circle', color: colors[1] }, // Add back bug icon
         { value: 'pi pi-book', color: colors[2] },
         { value: 'pi pi-sitemap', color: colors[3] },
         { value: 'pi pi-home', color: colors[4] },
@@ -264,28 +294,52 @@ const TaskCreator = () => {
         { value: 'I', color: colors[3] }
     ];
 
+    // Modify the workTypeOptionTemplate function
     const workTypeOptionTemplate = (option) => {
         if (!option) return <span>Select work type</span>;
+
+        // Special divider item - make it truly just a line with no behavior
+        if (option.id === 'divider') {
+            // Return a div with border styling instead of hr
+            return (
+                <div
+                    style={{
+                        borderBottom: '4px solid #333',
+                        width: '100%',
+                        height: '4px',
+                        margin: '8px 0',
+                        padding: 0,
+                        backgroundColor: 'transparent',
+                        pointerEvents: 'none'
+                    }}
+                ></div>
+            );
+        }
+
         if (option.id === 'create-new-work-type') {
             return (
-                <div className="flex align-items-center gap-2 text-primary">
-                    <i className="pi pi-plus"></i>
+                <div className="flex align-items-center gap-2 action-item-add">
+                    <i className="pi pi-plus work-type-icon"></i>
                     <span>{option.name}</span>
                 </div>
             );
         }
+
         if (option.id === 'edit-selected-work-type') {
             return (
-                <div className={`flex align-items-center gap-2 ${!formData.workType ? 'text-500-italic' : 'text-primary'}`}>
-                    <i className="pi pi-pencil"></i>
+                <div className="flex align-items-center gap-2 action-item-edit">
+                    <i className="pi pi-pencil work-type-icon"></i>
                     <span>{option.name}</span>
                 </div>
             );
         }
+
         return (
             <div className="flex align-items-center gap-2">
                 {option.icon && (
-                    <i className={`${option.icon} text-xl`} style={{ color: option.color }}></i>
+                    <div className="work-type-icon-container">
+                        <i className={`${option.icon} work-type-icon`} style={{ color: option.color }}></i>
+                    </div>
                 )}
                 <span>{option.name}</span>
             </div>
@@ -300,16 +354,16 @@ const TaskCreator = () => {
                 return;
             }
             if (value && value.id === 'edit-selected-work-type') {
-                if (formData.workType && formData.workType.id) {
+                if (formData.workType && formData.workType.id && workTypes.find(wt => wt.id === formData.workType.id)) {
                     openEditWorkType(formData.workType);
                 } else {
                     toast.current.show({
                         severity: 'warn',
                         summary: 'No Work Type Selected',
-                        detail: 'Please select a work type to edit.'
+                        detail: 'Please select a valid work type to edit.'
                     });
                 }
-                setFormData(prev => ({ ...prev, workType: prev.workType || (workTypes.find(wt => wt.id === 'task') || workTypes[0]) }));
+                // Keep the current selection instead of changing it
                 return;
             }
             setFormData(prev => ({
@@ -451,8 +505,9 @@ const TaskCreator = () => {
 
     const dropdownWorkTypes = [
         ...workTypes,
-        { name: 'Create New Work Type...', id: 'create-new-work-type' },
-        { name: 'Edit Selected Work Type...', id: 'edit-selected-work-type' }
+        { id: 'divider', disabled: true }, // Remove the name property completely
+        { name: 'Add Work Type', id: 'create-new-work-type' },
+        { name: 'Edit Work Type', id: 'edit-selected-work-type' }
     ];
 
     return (
@@ -475,12 +530,15 @@ const TaskCreator = () => {
                         itemTemplate={workTypeOptionTemplate}
                         valueTemplate={workTypeOptionTemplate}
                         className="w-full"
+                        optionDisabled={(option) => option.disabled === true}
+                        scrollHeight={workTypes.length >= 7 ? "250px" : "auto"}
+                        appendTo="self"
                     />
                 </div>
             </div>
 
             <Dialog
-                header={editingWorkType ? "Edit Work Type" : "Create Work Type"}
+                header={editingWorkType ? "Edit Work Type" : "Add Work Type"}
                 visible={workTypeModalVisible}
                 style={{ width: '450px' }}
                 onHide={() => setWorkTypeModalVisible(false)}
